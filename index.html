@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rhythmic Polygon — Nested Rotating Polygons Drum Sequencer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --bg-base: #06070b;
+      --bg-surface: #0c0e17;
+      --bg-card: rgba(18, 21, 36, 0.75);
+      --bg-card-hover: rgba(28, 33, 56, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(0, 229, 255, 0.4);
+      
+      --text-main: #f0f3fa;
+      --text-muted: #838ba1;
+      --text-dim: #4b5266;
+
+      --accent-cyan: #00e5ff;
+      --accent-pink: #ff2d55;
+      --accent-yellow: #ffea00;
+      --accent-purple: #b388ff;
+      --accent-green: #00e676;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP HEADER */
+    header.app-header {
+      height: 56px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--accent-cyan);
+      border-radius: 6px;
+      transform: rotate(45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+
+    .brand-icon::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent-pink);
+      border-radius: 50%;
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ffffff, var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-play {
+      background: linear-gradient(135deg, var(--accent-cyan), #00a8cc);
+      color: #06070b;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 22px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.35);
+    }
+
+    .btn-play:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.6);
+    }
+
+    .btn-play.playing {
+      background: linear-gradient(135deg, var(--accent-pink), #cc1439);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 45, 85, 0.5);
+    }
+
+    .clock-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .param-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .param-group label {
+      color: var(--text-muted);
+    }
+
+    .param-group input[type="number"] {
+      width: 50px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--accent-cyan);
+      padding: 3px 6px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .param-group input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* MAIN WORKSPACE */
+    main.app-workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* PANELS */
+    aside.panel {
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    aside.panel-right {
+      border-right: none;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .panel-section {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .panel-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* INSTRUMENT LIST */
+    .instrument-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .instrument-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .instrument-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--inst-color, #ff2d55);
+    }
+
+    .instrument-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .instrument-card.selected {
+      border-color: var(--inst-color, #00e5ff);
+      background: rgba(18, 25, 45, 0.9);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+    }
+
+    .inst-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .inst-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--inst-color, #ff2d55);
+      box-shadow: 0 0 8px var(--inst-color, #ff2d55);
+    }
+
+    .inst-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .inst-ratios-summary {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .inst-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-muted);
+      width: 26px;
+      height: 26px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-icon.active {
+      background: var(--accent-pink);
+      color: #fff;
+      border-color: var(--accent-pink);
+    }
+
+    .btn-add-inst {
+      margin: 12px 14px;
+      background: transparent;
+      border: 1px dashed rgba(0, 229, 255, 0.3);
+      color: var(--accent-cyan);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-inst:hover {
+      background: rgba(0, 229, 255, 0.08);
+      border-color: var(--accent-cyan);
+    }
+
+    /* CENTER STAGE */
+    .center-viewport {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #101322 0%, #06070b 100%);
+      overflow: hidden;
+    }
+
+    .svg-canvas-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    svg#polygon-svg {
+      width: 100%;
+      height: 100%;
+      max-width: 780px;
+      max-height: 780px;
+      filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.8));
+    }
+
+    .canvas-hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-item {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(12, 14, 23, 0.8);
+      backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .hud-item span {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    /* RIGHT INSPECTOR */
+    .inspector-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-row label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-row select,
+    .form-row input[type="text"] {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      outline: none;
+    }
+
+    .form-row select:focus,
+    .form-row input[type="text"]:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    /* RATIOS CHIPS EDITOR */
+    .ratios-editor {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      background: var(--bg-card);
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .ratio-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .ratio-chip input {
+      width: 28px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    /* CUSTOM RANGE SLIDER */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--accent-cyan);
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+
+    /* VELOCITY BARS */
+    .velocity-editor {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 80px;
+      background: var(--bg-card);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .vel-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .vel-bar-track {
+      width: 100%;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      display: flex;
+      align-items: flex-end;
+      cursor: ns-resize;
+      position: relative;
+    }
+
+    .vel-bar-fill {
+      width: 100%;
+      background: var(--inst-color, #ff2d55);
+      border-radius: 3px;
+      transition: height 0.05s ease;
+    }
+
+    .vel-label {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* BOTTOM STRUDEL DRAWER */
+    footer.app-drawer {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      height: 170px;
+      position: relative;
+      z-index: 50;
+      flex-shrink: 0;
+    }
+
+    footer.app-drawer.collapsed {
+      height: 40px;
+    }
+
+    .drawer-header {
+      height: 40px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(12, 14, 23, 0.95);
+      cursor: pointer;
+    }
+
+    .drawer-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .drawer-title span.badge {
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--accent-cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .drawer-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drawer-body {
+      flex: 1;
+      display: flex;
+      padding: 10px 20px;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .code-container {
+      flex: 1;
+      background: #040508;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      color: #a9b7c6;
+      white-space: pre;
+    }
+
+    .warning-banner {
+      color: #ff9800;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .warning-banner.visible {
+      display: block;
+    }
+
+    /* PRESET BUTTONS */
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-pill:hover {
+      background: var(--bg-card-hover);
+      color: var(--accent-cyan);
+      border-color: rgba(0, 229, 255, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon"></div>
+      <h1>Rhythmic Polygon</h1>
+    </div>
+
+    <div class="header-center">
+      <button class="btn-play" id="btn-play">
+        <span>▶</span> PLAY
+      </button>
+
+      <div class="clock-controls">
+        <div class="param-group">
+          <label for="input-bpm">BPM</label>
+          <input type="number" id="input-bpm" min="20" max="300" value="120">
+        </div>
+
+        <div class="param-group">
+          <label for="input-beats">METER</label>
+          <input type="number" id="input-beats" min="1" max="16" value="4">
+          <span style="color: var(--text-dim);">/</span>
+          <input type="number" id="input-beat-value" min="1" max="64" value="4" style="width: 40px;">
+        </div>
+
+        <div class="param-group">
+          <label for="input-subdivision">SUBDIV</label>
+          <input type="number" id="input-subdivision" min="1" max="64" value="16">
+        </div>
+
+        <div class="param-group">
+          <label for="select-quantize">QUANTIZE</label>
+          <select id="select-quantize" style="background: transparent; color: var(--accent-cyan); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 4px; font-family: var(--font-mono); font-size: 11px;">
+            <option value="off">OFF</option>
+            <option value="1/4">1/4</option>
+            <option value="1/8">1/8</option>
+            <option value="1/16">1/16</option>
+            <option value="1/32">1/32</option>
+          </select>
+        </div>
+
+        <div class="param-group">
+          <label for="select-cycle-mode">MODE</label>
+          <select id="select-cycle-mode" style="background: transparent; color: var(--accent-cyan); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 4px; font-family: var(--font-mono); font-size: 11px;">
+            <option value="locked">LOCKED</option>
+            <option value="free">FREE</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="param-group" style="background: var(--bg-card); padding: 4px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        <label for="input-seed">SEED</label>
+        <input type="number" id="input-seed" value="48372" style="width: 65px;">
+        <button class="btn-secondary" id="btn-new-seed" style="padding: 2px 6px; font-size: 10px;">🎲 NEW</button>
+      </div>
+
+      <button class="btn-secondary" id="btn-save" title="Save Project JSON">💾 SAVE</button>
+      <button class="btn-secondary" id="btn-load" title="Load Project JSON">📂 LOAD</button>
+      <input type="file" id="file-input-load" accept=".json" style="display: none;">
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="app-workspace">
+    <!-- LEFT PANEL: MASTER & INSTRUMENTS -->
+    <aside class="panel">
+      <div class="panel-header">
+        <span>INSTRUMENTS</span>
+        <span style="font-size: 10px; color: var(--text-dim);">MAX 5</span>
+      </div>
+
+      <div class="instrument-list" id="instrument-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <button class="btn-add-inst" id="btn-add-instrument">
+        <span>+</span> ADD INSTRUMENT
+      </button>
+
+      <div class="panel-section" style="margin-top: auto;">
+        <div class="panel-section-title">PRESETS (APPLY TO SELECTED)</div>
+        <div class="preset-pills" id="preset-pills">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE: POLYGON VIEWPORT -->
+    <section class="center-viewport">
+      <div class="canvas-hud">
+        <div class="hud-item">TEMPO: <span id="hud-bpm">120 BPM</span></div>
+        <div class="hud-item">PHASE: <span id="hud-phase">0°</span></div>
+        <div class="hud-item">BAR: <span id="hud-cycle">Cycle #1</span></div>
+      </div>
+
+      <div class="svg-canvas-wrapper">
+        <svg id="polygon-svg" viewBox="0 0 800 800"></svg>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: INSPECTOR -->
+    <aside class="panel panel-right" id="inspector-panel">
+      <div class="panel-header">
+        <span>INSPECTOR</span>
+        <span id="inspector-inst-tag" style="font-size: 10px; color: var(--accent-cyan); font-family: var(--font-mono);">SELECTED LAYER</span>
+      </div>
+
+      <div class="panel-section inspector-form">
+        <div class="form-row">
+          <label for="inst-name">NAME</label>
+          <input type="text" id="inst-name" value="Kick">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-row">
+            <label for="inst-sample">SAMPLE</label>
+            <select id="inst-sample">
+              <option value="bd">Kick (bd)</option>
+              <option value="sd">Snare (sd)</option>
+              <option value="hh">Closed Hat (hh)</option>
+              <option value="oh">Open Hat (oh)</option>
+              <option value="rim">Perc / Rim (rim)</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="inst-color">COLOR</label>
+            <input type="color" id="inst-color" value="#ff2d55" style="height: 36px; padding: 2px 4px; width: 100%; cursor: pointer;">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label>VERTICES & RATIOS</label>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-secondary" id="btn-remove-vertex" style="padding: 2px 8px; font-weight: 700;">-</button>
+              <button class="btn-secondary" id="btn-add-vertex" style="padding: 2px 8px; font-weight: 700;">+</button>
+            </div>
+          </div>
+          <div class="ratios-editor" id="ratios-chips">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="inst-phase">PHASE: <span id="inst-phase-val">0°</span></label>
+          <input type="range" id="inst-phase" min="0" max="360" value="0">
+        </div>
+
+        <div class="form-row">
+          <label for="inst-rotation">ROTATION SPEED: <span id="inst-rotation-val">1.00x</span></label>
+          <input type="range" id="inst-rotation" min="-4" max="4" step="0.25" value="1.0">
+        </div>
+
+        <div class="form-row">
+          <label for="inst-radius">RADIUS (LAYER DEPTH): <span id="inst-radius-val">35%</span></label>
+          <input type="range" id="inst-radius" min="0.15" max="0.95" step="0.01" value="0.35">
+        </div>
+
+        <div class="form-row">
+          <label for="inst-engine">ENGINE</label>
+          <select id="inst-engine">
+            <option value="static">Static (Fixed Orientation)</option>
+            <option value="rotation">Continuous Rotation</option>
+            <option value="drift">Phase Drift</option>
+            <option value="mutation">Periodic Mutation</option>
+            <option value="random">Controlled Seeded Random</option>
+          </select>
+        </div>
+
+        <div id="engine-params-box" style="display: flex; flex-direction: column; gap: 10px; background: var(--bg-card); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <!-- Engine params rendered dynamically -->
+        </div>
+
+        <div class="form-row">
+          <label>VELOCITY / GAIN (DRAG BARS OR SHIFT+DRAG VERTICES)</label>
+          <div class="velocity-editor" id="velocity-editor">
+            <!-- Velocity bars rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- BOTTOM DRAWER: STRUDEL OUTPUT -->
+  <footer class="app-drawer" id="strudel-drawer">
+    <div class="drawer-header" id="drawer-toggle">
+      <div class="drawer-title">
+        <span>STRUDEL CODE GENERATOR</span>
+        <span class="badge">LIVE TIDAL CODE</span>
+      </div>
+      <div class="drawer-actions">
+        <button class="btn-secondary" id="btn-copy-strudel">📋 COPY CODE</button>
+        <button class="btn-secondary" id="btn-download-js">💾 DOWNLOAD JS</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <div class="code-container" id="strudel-code">
+        <!-- Strudel code rendered dynamically -->
+      </div>
+    </div>
+    <div id="strudel-warning" class="warning-banner" style="padding: 0 20px 8px 20px;">
+      ⚠️ Some events have fractional timing. Mini-notation duration weights (@) used for microtiming.
+    </div>
+  </footer>
+
+  <!-- STANDALONE JAVASCRIPT: ZERO DEPENDENCIES, WORKS DIRECTLY VIA FILE:// -->
+  <script>
+    (function() {
+      'use strict';
+
+      const TWO_PI = Math.PI * 2;
+
+      /* ============================================================
+       * 1. SEEDED PRNG (Mulberry32)
+       * ============================================================ */
+      class SeededRandom {
+        constructor(seed = 48372) {
+          this.setSeed(seed);
+        }
+
+        setSeed(seed) {
+          if (typeof seed === 'string') {
+            let h = 2166136261 >>> 0;
+            for (let i = 0; i < seed.length; i++) {
+              h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+            }
+            this.seed = h >>> 0;
+          } else {
+            this.seed = Math.floor(Math.abs(seed)) >>> 0;
+          }
+        }
+
+        next() {
+          let t = (this.seed += 0x6d2b79f5);
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+
+        range(min, max) {
+          return min + this.next() * (max - min);
+        }
+
+        rangeInt(min, max) {
+          return Math.floor(this.range(min, max + 1));
+        }
+
+        choice(array) {
+          if (!array || array.length === 0) return null;
+          return array[this.rangeInt(0, array.length - 1)];
+        }
+      }
+
+      /* ============================================================
+       * 2. GEOMETRIC MODEL & MATH HELPERS
+       * ============================================================ */
+      function sum(arr) {
+        return arr.reduce((acc, val) => acc + (Number(val) || 0), 0);
+      }
+
+      function calculateEventPositions(ratios) {
+        if (!ratios || ratios.length === 0) return [];
+        const total = sum(ratios);
+        if (total <= 0) return ratios.map(() => 0);
+
+        let accumulated = 0;
+        return ratios.map((ratio) => {
+          const pos = accumulated / total;
+          accumulated += ratio;
+          return pos;
+        });
+      }
+
+      function quantizeTime(t, quantizeSubdivision) {
+        if (!quantizeSubdivision || quantizeSubdivision <= 0) return t;
+        const step = 1 / quantizeSubdivision;
+        const snapped = Math.round(t / step) * step;
+        return (snapped % 1 + 1) % 1;
+      }
+
+      function phaseToCoordinates(phaseNormalized, radius, center = { x: 400, y: 400 }) {
+        const angle = phaseNormalized * TWO_PI - Math.PI / 2;
+        return {
+          x: center.x + radius * Math.cos(angle),
+          y: center.y + radius * Math.sin(angle),
+          angle
+        };
+      }
+
+      function coordinatesToPhase(point, center = { x: 400, y: 400 }) {
+        const dx = point.x - center.x;
+        const dy = point.y - center.y;
+        let angle = Math.atan2(dy, dx) + Math.PI / 2;
+        if (angle < 0) angle += TWO_PI;
+        return angle / TWO_PI;
+      }
+
+      function distanceToCenter(point, center = { x: 400, y: 400 }) {
+        const dx = point.x - center.x;
+        const dy = point.y - center.y;
+        return Math.hypot(dx, dy);
+      }
+
+      function computePolygonVertices(instrument, center, baseMaxRadius, quantizeSubdivision = null) {
+        const ratios = instrument.ratios || [1, 1, 1, 1];
+        const eventPositions = calculateEventPositions(ratios);
+        const phaseTurns = ((instrument.phase % 360) + 360) % 360 / 360;
+        const radius = instrument.radius * baseMaxRadius;
+
+        return eventPositions.map((pos, i) => {
+          let effTime = (pos + phaseTurns) % 1;
+          if (quantizeSubdivision) {
+            effTime = quantizeTime(effTime, quantizeSubdivision);
+          }
+          const coords = phaseToCoordinates(effTime, radius, center);
+          const velocity = (instrument.gain && instrument.gain[i] !== undefined) ? instrument.gain[i] : 0.8;
+          const ratio = ratios[i];
+
+          return {
+            index: i,
+            ratio,
+            nominalPos: pos,
+            effectiveTime: effTime,
+            x: coords.x,
+            y: coords.y,
+            angle: coords.angle,
+            velocity
+          };
+        });
+      }
+
+      function updateRatiosFromVertexDrag(ratios, vertexIndex, newPhaseTurns, instrumentPhaseDeg = 0) {
+        const count = ratios.length;
+        if (count <= 1) return { ratios: [...ratios], phaseDelta: 0 };
+
+        const phaseTurns = ((instrumentPhaseDeg % 360) + 360) % 360 / 360;
+        let targetTime = (newPhaseTurns - phaseTurns + 10) % 1;
+
+        const positions = calculateEventPositions(ratios);
+        const prevIndex = (vertexIndex - 1 + count) % count;
+        const nextIndex = (vertexIndex + 1) % count;
+
+        if (vertexIndex === 0) {
+          return {
+            ratios: [...ratios],
+            phaseDelta: (newPhaseTurns - phaseTurns) * 360
+          };
+        }
+
+        const prevPos = positions[prevIndex];
+        let nextPos = positions[nextIndex];
+        if (nextIndex === 0) nextPos = 1.0;
+
+        const minGap = 0.02;
+        const clampedTime = Math.max(prevPos + minGap, Math.min(nextPos - minGap, targetTime));
+
+        const newRatios = [...ratios];
+        const prevInterval = clampedTime - prevPos;
+        const nextInterval = nextPos - clampedTime;
+
+        const combinedRatios = ratios[prevIndex] + ratios[vertexIndex];
+        const combinedSpan = nextPos - prevPos;
+        if (combinedSpan > 0.0001) {
+          const fraction = prevInterval / combinedSpan;
+          let r1 = Math.max(0.5, Math.round(combinedRatios * fraction * 10) / 10);
+          let r2 = Math.max(0.5, Math.round((combinedRatios - r1) * 10) / 10);
+          newRatios[prevIndex] = r1;
+          newRatios[vertexIndex] = r2;
+        }
+
+        return { ratios: newRatios, phaseDelta: 0 };
+      }
+
+      function generateEuclideanRatios(pulses, steps) {
+        pulses = Math.max(1, Math.min(pulses, steps));
+        if (pulses >= steps) return new Array(steps).fill(1);
+
+        const hits = [];
+        for (let i = 0; i < steps; i++) {
+          hits.push((i * pulses) % steps < pulses ? 1 : 0);
+        }
+
+        const ratios = [];
+        let currentDist = 0;
+        let firstHitFound = false;
+        let leadingZeros = 0;
+
+        for (let i = 0; i < steps; i++) {
+          currentDist++;
+          if (hits[i] === 1) {
+            if (!firstHitFound) {
+              firstHitFound = true;
+              leadingZeros = currentDist - 1;
+              currentDist = 0;
+            } else {
+              ratios.push(currentDist);
+              currentDist = 0;
+            }
+          }
+        }
+        if (firstHitFound) {
+          ratios.push(currentDist + leadingZeros);
+        }
+        return ratios.length > 0 ? ratios : [1, 1, 1, 1];
+      }
+
+      /* ============================================================
+       * 3. PRESETS & STATE
+       * ============================================================ */
+      const PRESETS = {
+        'Square': [1, 1, 1, 1],
+        'Triangle': [1, 1, 1],
+        'Pentagon': [1, 1, 1, 1, 1],
+        'Hexagon': [1, 1, 1, 1, 1, 1],
+        '3:2': [3, 2],
+        '3:3:2': [3, 3, 2],
+        '3:2:3:2': [3, 2, 3, 2],
+        '3:3:2:4': [3, 3, 2, 4],
+        '5:2:3:2': [5, 2, 3, 2],
+        '5:7': [5, 7],
+        'Euclidean (3, 8)': [3, 3, 2],
+        'Euclidean (5, 8)': [2, 1, 2, 1, 2],
+        'Prime': [2, 3, 5, 7]
+      };
+
+      function createDefaultInstrument(id, name, sample, ratios, radius, color, rotation = 1.0) {
+        return {
+          id: id || 'inst_' + Math.random().toString(36).substr(2, 9),
+          name: name || 'Drum',
+          sample: sample || 'bd',
+          ratios: [...ratios],
+          phase: 0,
+          rotation: rotation,
+          engine: 'static',
+          engineParams: {
+            speed: rotation,
+            drift: 0.15,
+            mutationProb: 0.25,
+            mutationAmount: 1,
+            cycleLength: 4
+          },
+          gain: ratios.map((_, i) => (i === 0 ? 1.0 : 0.7)),
+          radius: radius,
+          color: color || '#ff2d55',
+          muted: false,
+          solo: false,
+          cycleMode: 'locked'
+        };
+      }
+
+      function createInitialState() {
+        return {
+          master: {
+            beats: 4,
+            subdivision: 16,
+            bpm: 120,
+            beatValue: 4,
+            quantize: 'off',
+            cycleMode: 'locked',
+            seed: 48372,
+            isPlaying: false
+          },
+          selectedInstrumentId: 'inst_kick',
+          instruments: [
+            {
+              id: 'inst_kick',
+              name: 'Kick',
+              sample: 'bd',
+              ratios: [3, 3, 2, 4],
+              phase: 0,
+              rotation: 1.0,
+              engine: 'static',
+              engineParams: { speed: 1.0, drift: 0.1, mutationProb: 0.2, mutationAmount: 1, cycleLength: 4 },
+              gain: [1.0, 0.5, 0.8, 0.6],
+              radius: 0.28,
+              color: '#ff2d55',
+              muted: false,
+              solo: false,
+              cycleMode: 'locked'
+            },
+            {
+              id: 'inst_snare',
+              name: 'Snare',
+              sample: 'sd',
+              ratios: [5, 2, 3, 2],
+              phase: 0,
+              rotation: 1.0,
+              engine: 'static',
+              engineParams: { speed: 1.0, drift: 0.1, mutationProb: 0.2, mutationAmount: 1, cycleLength: 4 },
+              gain: [0.9, 0.5, 0.8, 0.6],
+              radius: 0.48,
+              color: '#00e5ff',
+              muted: false,
+              solo: false,
+              cycleMode: 'locked'
+            },
+            {
+              id: 'inst_hat',
+              name: 'Closed HH',
+              sample: 'hh',
+              ratios: [1, 2, 1, 3, 1, 2, 2],
+              phase: 0,
+              rotation: 1.25,
+              engine: 'static',
+              engineParams: { speed: 1.25, drift: 0.15, mutationProb: 0.3, mutationAmount: 1, cycleLength: 4 },
+              gain: [0.7, 0.4, 0.6, 0.5, 0.7, 0.4, 0.6],
+              radius: 0.68,
+              color: '#ffea00',
+              muted: false,
+              solo: false,
+              cycleMode: 'locked'
+            },
+            {
+              id: 'inst_perc',
+              name: 'Perc',
+              sample: 'rim',
+              ratios: [2, 3, 2, 3, 2],
+              phase: 0,
+              rotation: 1.75,
+              engine: 'static',
+              engineParams: { speed: 1.75, drift: 0.2, mutationProb: 0.2, mutationAmount: 1, cycleLength: 4 },
+              gain: [0.8, 0.6, 0.7, 0.5, 0.8],
+              radius: 0.88,
+              color: '#b388ff',
+              muted: false,
+              solo: false,
+              cycleMode: 'locked'
+            }
+          ]
+        };
+      }
+
+      /* ============================================================
+       * 4. WEB AUDIO SYNTHESIZER
+       * ============================================================ */
+      class AudioEngine {
+        constructor() {
+          this.ctx = null;
+          this.masterGain = null;
+          this.initialized = false;
+        }
+
+        init() {
+          if (this.initialized && this.ctx) {
+            if (this.ctx.state === 'suspended') {
+              this.ctx.resume();
+            }
+            return;
+          }
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+            this.masterGain.connect(this.ctx.destination);
+            this.initialized = true;
+          } catch (e) {
+            console.warn('Web Audio initialization error:', e);
+          }
+        }
+
+        trigger(sample, velocity = 0.8) {
+          if (!this.initialized) this.init();
+          if (!this.ctx) return;
+          const t = this.ctx.currentTime;
+          const vel = Math.max(0.01, Math.min(1.0, velocity));
+
+          switch (sample.toLowerCase()) {
+            case 'bd':
+            case 'kick':
+              this.playKick(t, vel);
+              break;
+            case 'sd':
+            case 'snare':
+              this.playSnare(t, vel);
+              break;
+            case 'hh':
+            case 'hat':
+              this.playClosedHat(t, vel);
+              break;
+            case 'oh':
+            case 'openhh':
+              this.playOpenHat(t, vel);
+              break;
+            case 'rim':
+            case 'perc':
+              this.playRimshot(t, vel);
+              break;
+            default:
+              this.playKick(t, vel);
+              break;
+          }
+        }
+
+        playKick(t, vel) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.frequency.setValueAtTime(140 + 60 * vel, t);
+          osc.frequency.exponentialRampToValueAtTime(38, t + 0.08);
+
+          gain.gain.setValueAtTime(1.0 * vel, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+          const clickOsc = this.ctx.createOscillator();
+          const clickGain = this.ctx.createGain();
+          clickOsc.type = 'triangle';
+          clickOsc.frequency.setValueAtTime(300, t);
+          clickGain.gain.setValueAtTime(0.6 * vel, t);
+          clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+
+          osc.connect(gain);
+          gain.connect(this.masterGain);
+          clickOsc.connect(clickGain);
+          clickGain.connect(this.masterGain);
+
+          osc.start(t);
+          osc.stop(t + 0.38);
+          clickOsc.start(t);
+          clickOsc.stop(t + 0.025);
+        }
+
+        playSnare(t, vel) {
+          const osc = this.ctx.createOscillator();
+          const oscGain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(180, t);
+          osc.frequency.exponentialRampToValueAtTime(65, t + 0.07);
+
+          oscGain.gain.setValueAtTime(0.7 * vel, t);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+          osc.connect(oscGain);
+          oscGain.connect(this.masterGain);
+
+          const noiseBuffer = this.getNoiseBuffer();
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = noiseBuffer;
+
+          const noiseFilter = this.ctx.createBiquadFilter();
+          noiseFilter.type = 'highpass';
+          noiseFilter.frequency.setValueAtTime(1200, t);
+
+          const noiseGain = this.ctx.createGain();
+          noiseGain.gain.setValueAtTime(0.85 * vel, t);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(this.masterGain);
+
+          osc.start(t);
+          osc.stop(t + 0.14);
+          noise.start(t);
+          noise.stop(t + 0.22);
+        }
+
+        playClosedHat(t, vel) {
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = this.getNoiseBuffer();
+
+          const bandpass = this.ctx.createBiquadFilter();
+          bandpass.type = 'bandpass';
+          bandpass.frequency.setValueAtTime(8500, t);
+          bandpass.Q.setValueAtTime(2.5, t);
+
+          const highpass = this.ctx.createBiquadFilter();
+          highpass.type = 'highpass';
+          highpass.frequency.setValueAtTime(7000, t);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.75 * vel, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+          noise.connect(bandpass);
+          bandpass.connect(highpass);
+          highpass.connect(gain);
+          gain.connect(this.masterGain);
+
+          noise.start(t);
+          noise.stop(t + 0.06);
+        }
+
+        playOpenHat(t, vel) {
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = this.getNoiseBuffer();
+
+          const bandpass = this.ctx.createBiquadFilter();
+          bandpass.type = 'bandpass';
+          bandpass.frequency.setValueAtTime(7500, t);
+          bandpass.Q.setValueAtTime(1.8, t);
+
+          const highpass = this.ctx.createBiquadFilter();
+          highpass.type = 'highpass';
+          highpass.frequency.setValueAtTime(6000, t);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.7 * vel, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+
+          noise.connect(bandpass);
+          bandpass.connect(highpass);
+          highpass.connect(gain);
+          gain.connect(this.masterGain);
+
+          noise.start(t);
+          noise.stop(t + 0.35);
+        }
+
+        playRimshot(t, vel) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1600, t);
+          osc.frequency.exponentialRampToValueAtTime(500, t + 0.03);
+
+          gain.gain.setValueAtTime(0.9 * vel, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+
+          osc.connect(gain);
+          gain.connect(this.masterGain);
+
+          osc.start(t);
+          osc.stop(t + 0.08);
+        }
+
+        getNoiseBuffer() {
+          if (!this._noiseBuffer && this.ctx) {
+            const bufferSize = this.ctx.sampleRate * 1.5;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+              data[i] = Math.random() * 2 - 1;
+            }
+            this._noiseBuffer = buffer;
+          }
+          return this._noiseBuffer;
+        }
+      }
+
+      /* ============================================================
+       * 5. MASTER CLOCK SCHEDULER
+       * ============================================================ */
+      class MasterClock {
+        constructor(options = {}) {
+          this.bpm = options.bpm || 120;
+          this.beats = options.beats || 4;
+          this.beatValue = options.beatValue || 4;
+          this.subdivision = options.subdivision || 16;
+          this.isPlaying = false;
+          this.phase = 0;
+          this.cycleCount = 0;
+          this.lastTimestamp = null;
+          this.onTickCallbacks = [];
+          this._rafId = null;
+          this._boundLoop = this._loop.bind(this);
+        }
+
+        get cycleDuration() {
+          return (60 / this.bpm) * this.beats * (4 / this.beatValue);
+        }
+
+        setBpm(bpm) {
+          this.bpm = Math.max(20, Math.min(300, Number(bpm) || 120));
+        }
+
+        setMeter(beats, subdivision, beatValue) {
+          this.beats = Math.max(1, Math.min(16, Number(beats) || 4));
+          this.subdivision = Math.max(1, Math.min(64, Number(subdivision) || 16));
+          if (beatValue !== undefined) this.beatValue = Math.max(1, Math.min(64, Number(beatValue) || 4));
+        }
+
+        onTick(cb) {
+          this.onTickCallbacks.push(cb);
+        }
+
+        start() {
+          if (this.isPlaying) return;
+          this.isPlaying = true;
+          this.lastTimestamp = performance.now();
+          this._rafId = requestAnimationFrame(this._boundLoop);
+        }
+
+        stop() {
+          this.isPlaying = false;
+          if (this._rafId) {
+            cancelAnimationFrame(this._rafId);
+            this._rafId = null;
+          }
+          this.lastTimestamp = null;
+        }
+
+        _loop(now) {
+          if (!this.isPlaying) return;
+          if (!this.lastTimestamp) this.lastTimestamp = now;
+          const deltaMs = Math.min(now - this.lastTimestamp, 100);
+          this.lastTimestamp = now;
+
+          const dtSeconds = deltaMs / 1000;
+          const prevPhase = this.phase;
+          const phaseAdvance = dtSeconds / this.cycleDuration;
+          let nextPhase = prevPhase + phaseAdvance;
+
+          let wrapped = false;
+          if (nextPhase >= 1.0) {
+            this.cycleCount++;
+            wrapped = true;
+          }
+          this.phase = nextPhase % 1.0;
+
+          for (const cb of this.onTickCallbacks) {
+            cb({
+              prevPhase,
+              currPhase: this.phase,
+              dt: dtSeconds,
+              wrapped,
+              cycleCount: this.cycleCount,
+              bpm: this.bpm,
+              beats: this.beats,
+              beatValue: this.beatValue,
+              subdivision: this.subdivision
+            });
+          }
+
+          this._rafId = requestAnimationFrame(this._boundLoop);
+        }
+      }
+
+      /* ============================================================
+       * 6. ENGINE MANAGER
+       * ============================================================ */
+      class EngineManager {
+        constructor(seed = 48372) {
+          this.seed = seed;
+          this.rng = new SeededRandom(seed);
+        }
+
+        setSeed(seed) {
+          this.seed = seed;
+          this.rng.setSeed(seed);
+        }
+
+        update(instruments, tickInfo) {
+          const { dt, wrapped, cycleCount } = tickInfo;
+
+          instruments.forEach((inst) => {
+            if (!inst || inst.muted) return;
+            const engine = inst.engine || 'static';
+            const params = inst.engineParams || {};
+
+            switch (engine) {
+              case 'static':
+                break;
+              case 'rotation': {
+                const speed = params.speed !== undefined ? params.speed : (inst.rotation || 1.0);
+                const degPerSec = (speed * 360) / ((60 / tickInfo.bpm) * tickInfo.beats * (4 / (tickInfo.beatValue || 4)));
+                inst.phase = (inst.phase + degPerSec * dt) % 360;
+                if (inst.phase < 0) inst.phase += 360;
+                break;
+              }
+              case 'drift': {
+                const driftDegPerSec = (params.drift || 0.15) * 360;
+                inst.phase = (inst.phase + driftDegPerSec * dt) % 360;
+                if (inst.phase < 0) inst.phase += 360;
+                break;
+              }
+              case 'mutation': {
+                if (wrapped) {
+                  const cycleInterval = Math.max(1, Math.round(params.cycleLength || 4));
+                  if (cycleCount % cycleInterval === 0) {
+                    this.applyMutation(inst, params.mutationAmount || 1, params.mutationProb || 0.4);
+                  }
+                }
+                break;
+              }
+              case 'random': {
+                if (wrapped) {
+                  const cycleInterval = Math.max(1, Math.round(params.cycleLength || 2));
+                  if (cycleCount % cycleInterval === 0) {
+                    const roll = this.rng.next();
+                    const prob = params.mutationProb !== undefined ? params.mutationProb : 0.5;
+                    if (roll < prob) {
+                      this.applyControlledRandom(inst, params.mutationAmount || 1);
+                    }
+                  }
+                }
+                break;
+              }
+            }
+          });
+        }
+
+        applyMutation(inst, amount = 1, probability = 0.5) {
+          if (!inst.ratios || inst.ratios.length < 2) return;
+          if (Math.random() > probability) return;
+
+          const count = inst.ratios.length;
+          const i = Math.floor(Math.random() * count);
+          const j = (i + 1) % count;
+          const delta = (Math.random() > 0.5 ? 1 : -1) * amount;
+
+          if (inst.ratios[i] + delta >= 1 && inst.ratios[i] + delta <= 16 &&
+              inst.ratios[j] - delta >= 1 && inst.ratios[j] - delta <= 16) {
+            inst.ratios[i] += delta;
+            inst.ratios[j] -= delta;
+          }
+        }
+
+        applyControlledRandom(inst, maxDelta = 1) {
+          if (!inst.ratios || inst.ratios.length < 2) return;
+          const count = inst.ratios.length;
+          const i = this.rng.rangeInt(0, count - 1);
+          const j = (i + 1) % count;
+          const delta = (this.rng.next() > 0.5 ? 1 : -1) * Math.max(1, Math.round(maxDelta));
+
+          if (inst.ratios[i] + delta >= 1 && inst.ratios[i] + delta <= 16 &&
+              inst.ratios[j] - delta >= 1 && inst.ratios[j] - delta <= 16) {
+            inst.ratios[i] += delta;
+            inst.ratios[j] -= delta;
+          }
+        }
+      }
+
+      /* ============================================================
+       * 7. STRUDEL EXPORTER
+       * ============================================================ */
+      class StrudelExporter {
+        static export(state) {
+          const { master, instruments } = state;
+          const bpm = master.bpm || 120;
+          const beats = master.beats || 4;
+          const beatValue = master.beatValue || 4;
+          const subdivision = master.subdivision || 16;
+          const quantize = master.quantize;
+
+          let hasFractionalWarning = false;
+          const activeInstruments = instruments.filter(inst => !inst.muted);
+
+          if (activeInstruments.length === 0) {
+            return {
+              code: `// All instruments muted\nstack()`,
+              hasFractionalWarning: false
+            };
+          }
+
+          const lines = [];
+          lines.push(`// Rhythmic Polygon -> Strudel Export`);
+          lines.push(`// Meter: ${beats}/${beatValue} | BPM: ${bpm} | Subdivision: ${subdivision}`);
+          lines.push(`setcps(${bpm} / 60 / ${beats} * ${beatValue} / 4);\n`);
+
+          const stackItems = activeInstruments.map((inst) => {
+            const sample = inst.sample || 'bd';
+            const ratios = inst.ratios || [1, 1, 1, 1];
+            const gains = inst.gain || ratios.map(() => 0.8);
+            const totalRatios = sum(ratios);
+
+            let patternStr = '';
+            let gainStr = gains.map(g => Number(g).toFixed(2).replace(/\.?0+$/, '')).join(' ');
+
+            let canUseStepGrid = false;
+            let gridSteps = subdivision;
+            if (quantize && quantize !== 'off') {
+              const parts = quantize.split('/');
+              if (parts.length === 2) gridSteps = parseInt(parts[1], 10);
+            }
+
+            if (gridSteps % totalRatios === 0) {
+              const factor = gridSteps / totalRatios;
+              const stepsArr = new Array(gridSteps).fill('~');
+              let cur = 0;
+              ratios.forEach((r) => {
+                stepsArr[cur] = sample;
+                cur += Math.round(r * factor);
+              });
+              patternStr = StrudelExporter.simplifyPattern(stepsArr);
+              canUseStepGrid = true;
+            }
+
+            if (!canUseStepGrid) {
+              if (quantize === 'off') hasFractionalWarning = true;
+              const weightedEvents = ratios.map((r) => {
+                const formattedRatio = Number(r.toFixed(2)).toString();
+                return `${sample}@${formattedRatio}`;
+              });
+              patternStr = weightedEvents.join(' ');
+            }
+
+            let itemCode = `  s("${patternStr}")\n    .gain("${gainStr}")`;
+            if (inst.phase && Math.abs(inst.phase % 360) > 0.5) {
+              const phaseFraction = (((inst.phase % 360) + 360) % 360 / 360).toFixed(3);
+              itemCode += `\n    .early(${phaseFraction})`;
+            }
+            return itemCode;
+          });
+
+          let code = lines.join('\n');
+          if (hasFractionalWarning) {
+            code += `// Note: Some events require fractional timing. Mini-notation duration weights (@) used.\n\n`;
+          }
+          code += `stack(\n${stackItems.join(',\n\n')}\n)`;
+          return { code, hasFractionalWarning };
+        }
+
+        static simplifyPattern(tokens) {
+          if (!tokens || tokens.length === 0) return '';
+          const result = [];
+          let i = 0;
+          while (i < tokens.length) {
+            const cur = tokens[i];
+            let run = 1;
+            while (i + run < tokens.length && tokens[i + run] === cur) {
+              run++;
+            }
+            if (run >= 3 && cur !== '~') {
+              result.push(`${cur}*${run}`);
+              i += run;
+            } else {
+              result.push(cur);
+              i++;
+            }
+          }
+          return result.join(' ');
+        }
+      }
+
+      /* ============================================================
+       * 8. INTERACTIVE SVG RENDERER
+       * ============================================================ */
+      class PolygonRenderer {
+        constructor(svgElement, options = {}) {
+          this.svg = svgElement;
+          this.width = options.width || 800;
+          this.height = options.height || 800;
+          this.center = { x: this.width / 2, y: this.height / 2 };
+          this.baseMaxRadius = options.maxRadius || 340;
+
+          this.onVertexDrag = null;
+          this.onVertexVelocityChange = null;
+          this.onVertexClick = null;
+          this.onPolygonRotate = null;
+          this.onRadiusChange = null;
+          this.onSelectInstrument = null;
+
+          this.dragState = null;
+          this.hitAnimations = new Map();
+
+          this.initDefs();
+          this.bindEvents();
+        }
+
+        initDefs() {
+          this.svg.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
+          this.svg.innerHTML = `
+            <defs>
+              <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="glow-subtle" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <radialGradient id="center-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.35" />
+                <stop offset="60%" stop-color="#00e5ff" stop-opacity="0.05" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="bg-radial" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#121526" />
+                <stop offset="85%" stop-color="#090a12" />
+                <stop offset="100%" stop-color="#050609" />
+              </radialGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#bg-radial)" />
+            <g id="grid-layer"></g>
+            <g id="polygons-layer"></g>
+            <g id="playhead-layer"></g>
+            <g id="fx-layer"></g>
+          `;
+
+          this.gridLayer = this.svg.querySelector('#grid-layer');
+          this.polygonsLayer = this.svg.querySelector('#polygons-layer');
+          this.playheadLayer = this.svg.querySelector('#playhead-layer');
+          this.fxLayer = this.svg.querySelector('#fx-layer');
+        }
+
+        flashVertex(instrumentId, vertexIndex, x, y, color, velocity) {
+          const key = `${instrumentId}_${vertexIndex}`;
+          this.hitAnimations.set(key, {
+            startTime: performance.now(),
+            duration: 380,
+            x,
+            y,
+            color,
+            velocity: velocity || 0.8
+          });
+        }
+
+        render(state, currentMasterPhase) {
+          const { master, instruments, selectedInstrumentId } = state;
+          const quantizeSub = master.quantize !== 'off' ? parseInt(master.quantize.split('/')[1] || 16, 10) : null;
+
+          this.renderGrid(master.beats, master.subdivision);
+          this.renderInstruments(instruments, selectedInstrumentId, quantizeSub);
+          this.renderPlayhead(currentMasterPhase);
+          this.renderHitAnimations();
+        }
+
+        renderGrid(beats = 4, subdivision = 16) {
+          let html = '';
+          const cx = this.center.x;
+          const cy = this.center.y;
+          const maxR = this.baseMaxRadius;
+
+          html += `<circle cx="${cx}" cy="${cy}" r="${maxR * 0.95}" fill="url(#center-glow)" />`;
+          html += `<circle cx="${cx}" cy="${cy}" r="${maxR}" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />`;
+          html += `<circle cx="${cx}" cy="${cy}" r="${maxR + 10}" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1" stroke-dasharray="2, 6" />`;
+
+          const totalSub = Math.max(1, subdivision);
+          for (let i = 0; i < totalSub; i++) {
+            const angle = (i / totalSub) * TWO_PI - Math.PI / 2;
+            const isBeat = (i % (totalSub / beats)) === 0;
+            const x1 = cx + (isBeat ? 20 : maxR * 0.18) * Math.cos(angle);
+            const y1 = cy + (isBeat ? 20 : maxR * 0.18) * Math.sin(angle);
+            const x2 = cx + (maxR + (isBeat ? 8 : 0)) * Math.cos(angle);
+            const y2 = cy + (maxR + (isBeat ? 8 : 0)) * Math.sin(angle);
+
+            const strokeColor = isBeat ? 'rgba(0, 229, 255, 0.28)' : 'rgba(255, 255, 255, 0.06)';
+            const strokeWidth = isBeat ? '1.5' : '0.8';
+            const dash = isBeat ? '' : 'stroke-dasharray="2, 4"';
+
+            html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="${strokeWidth}" ${dash} />`;
+
+            if (isBeat) {
+              const beatNum = Math.floor(i / (totalSub / beats)) + 1;
+              const lx = cx + (maxR + 24) * Math.cos(angle);
+              const ly = cy + (maxR + 24) * Math.sin(angle) + 4;
+              html += `<text x="${lx}" y="${ly}" fill="rgba(0, 229, 255, 0.6)" font-size="11" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', monospace">${beatNum}</text>`;
+            }
+          }
+
+          for (let r = 0.25; r <= 0.75; r += 0.25) {
+            html += `<circle cx="${cx}" cy="${cy}" r="${maxR * r}" fill="none" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1" stroke-dasharray="3, 5" />`;
+          }
+          html += `<circle cx="${cx}" cy="${cy}" r="4" fill="#00e5ff" opacity="0.8" />`;
+          this.gridLayer.innerHTML = html;
+        }
+
+        renderInstruments(instruments, selectedInstrumentId, quantizeSub) {
+          let polyHtml = '';
+          const cx = this.center.x;
+          const cy = this.center.y;
+          const maxR = this.baseMaxRadius;
+
+          instruments.forEach((inst) => {
+            const isSelected = inst.id === selectedInstrumentId;
+            const isMuted = inst.muted;
+            const color = inst.color || '#ff2d55';
+            const radius = inst.radius * maxR;
+
+            const vertices = computePolygonVertices(inst, this.center, maxR, quantizeSub);
+
+            polyHtml += `
+              <circle cx="${cx}" cy="${cy}" r="${radius}" 
+                fill="none" 
+                stroke="${color}" 
+                stroke-opacity="${isSelected ? 0.35 : 0.12}" 
+                stroke-width="${isSelected ? 1.8 : 1}" 
+                stroke-dasharray="4, 6" 
+              />
+            `;
+
+            if (isSelected && !isMuted) {
+              const rx = cx + radius;
+              const ry = cy;
+              polyHtml += `
+                <g class="radius-handle" data-inst-id="${inst.id}" style="cursor: ew-resize;">
+                  <circle cx="${rx}" cy="${ry}" r="7" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="1.5" />
+                  <circle cx="${rx}" cy="${ry}" r="2.5" fill="#ffffff" />
+                </g>
+              `;
+            }
+
+            if (vertices.length >= 2) {
+              const pointsStr = vertices.map(v => `${v.x.toFixed(1)},${v.y.toFixed(1)}`).join(' ');
+              polyHtml += `
+                <polygon points="${pointsStr}" 
+                  data-inst-id="${inst.id}"
+                  class="poly-body"
+                  fill="${color}" 
+                  fill-opacity="${isMuted ? 0.03 : (isSelected ? 0.2 : 0.1)}" 
+                  stroke="${color}" 
+                  stroke-width="${isSelected ? 2.5 : 1.5}" 
+                  stroke-opacity="${isMuted ? 0.25 : 0.9}"
+                  filter="url(#glow-subtle)"
+                  style="cursor: grab;"
+                />
+              `;
+            }
+
+            vertices.forEach((v) => {
+              const vel = v.velocity !== undefined ? v.velocity : 0.8;
+              const nodeRadius = 5 + vel * 8;
+              const opacity = isMuted ? 0.3 : 1.0;
+
+              polyHtml += `
+                <g class="vertex-node" 
+                   data-inst-id="${inst.id}" 
+                   data-vertex-idx="${v.index}"
+                   style="cursor: pointer;"
+                   transform="translate(${v.x.toFixed(1)}, ${v.y.toFixed(1)})">
+                  
+                  <circle cx="0" cy="0" r="${nodeRadius + 4}" fill="${color}" fill-opacity="${isSelected ? 0.25 : 0.12}" filter="url(#glow-subtle)" />
+                  <circle cx="0" cy="0" r="${nodeRadius}" 
+                    fill="${color}" 
+                    fill-opacity="${opacity * 0.85}" 
+                    stroke="#ffffff" 
+                    stroke-width="${isSelected ? 1.5 : 1}" 
+                    stroke-opacity="${isSelected ? 0.9 : 0.5}" 
+                  />
+                  <circle cx="0" cy="0" r="${Math.max(2, nodeRadius * 0.35)}" fill="#ffffff" opacity="${opacity}" />
+                  <text x="0" y="${-nodeRadius - 5}" 
+                    fill="${color}" 
+                    font-size="9" 
+                    font-weight="700" 
+                    text-anchor="middle" 
+                    font-family="'JetBrains Mono', monospace"
+                    opacity="${isSelected ? 0.9 : 0.5}">
+                    ${v.ratio}
+                  </text>
+                </g>
+              `;
+            });
+          });
+
+          this.polygonsLayer.innerHTML = polyHtml;
+        }
+
+        renderPlayhead(phase = 0) {
+          const cx = this.center.x;
+          const cy = this.center.y;
+          const maxR = this.baseMaxRadius;
+          const angle = phase * TWO_PI - Math.PI / 2;
+
+          const px = cx + (maxR + 15) * Math.cos(angle);
+          const py = cy + (maxR + 15) * Math.sin(angle);
+
+          let html = `
+            <line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}" 
+              stroke="#00e5ff" 
+              stroke-width="2" 
+              stroke-opacity="0.85" 
+              filter="url(#glow-strong)"
+            />
+            <circle cx="${px}" cy="${py}" r="5" fill="#00e5ff" filter="url(#glow-strong)" />
+            <circle cx="${px}" cy="${py}" r="2" fill="#ffffff" />
+            <polygon points="${cx},${cy - maxR - 18} ${cx - 7},${cy - maxR - 32} ${cx + 7},${cy - maxR - 32}" 
+              fill="#00e5ff" 
+              opacity="0.75" 
+            />
+          `;
+          this.playheadLayer.innerHTML = html;
+        }
+
+        renderHitAnimations() {
+          const now = performance.now();
+          let fxHtml = '';
+
+          for (const [key, hit] of this.hitAnimations.entries()) {
+            const elapsed = now - hit.startTime;
+            if (elapsed > hit.duration) {
+              this.hitAnimations.delete(key);
+              continue;
+            }
+            const progress = elapsed / hit.duration;
+            const r = 10 + progress * 35 * hit.velocity;
+            const opacity = (1 - progress) * 0.9;
+
+            fxHtml += `
+              <circle cx="${hit.x}" cy="${hit.y}" r="${r}" 
+                fill="none" 
+                stroke="${hit.color}" 
+                stroke-width="${2.5 * (1 - progress)}" 
+                stroke-opacity="${opacity}" 
+                filter="url(#glow-strong)" 
+              />
+              <circle cx="${hit.x}" cy="${hit.y}" r="${r * 0.5}" 
+                fill="${hit.color}" 
+                fill-opacity="${opacity * 0.4}" 
+              />
+            `;
+          }
+          this.fxLayer.innerHTML = fxHtml;
+        }
+
+        bindEvents() {
+          const getSvgCoords = (e) => {
+            const rect = this.svg.getBoundingClientRect();
+            const scaleX = this.width / rect.width;
+            const scaleY = this.height / rect.height;
+            return {
+              x: (e.clientX - rect.left) * scaleX,
+              y: (e.clientY - rect.top) * scaleY
+            };
+          };
+
+          this.svg.addEventListener('pointerdown', (e) => {
+            const target = e.target;
+            const pt = getSvgCoords(e);
+
+            const vertexEl = target.closest('.vertex-node');
+            if (vertexEl) {
+              e.preventDefault();
+              const instId = vertexEl.getAttribute('data-inst-id');
+              const vIdx = parseInt(vertexEl.getAttribute('data-vertex-idx'), 10);
+              this.dragState = {
+                type: e.shiftKey ? 'vertex-velocity' : 'vertex-angle',
+                instrumentId: instId,
+                vertexIndex: vIdx,
+                startX: pt.x,
+                startY: pt.y,
+                hasMoved: false
+              };
+              if (this.onSelectInstrument) this.onSelectInstrument(instId);
+              return;
+            }
+
+            const radiusHandle = target.closest('.radius-handle');
+            if (radiusHandle) {
+              e.preventDefault();
+              const instId = radiusHandle.getAttribute('data-inst-id');
+              this.dragState = {
+                type: 'radius',
+                instrumentId: instId,
+                startX: pt.x,
+                startY: pt.y
+              };
+              return;
+            }
+
+            const polyBody = target.closest('.poly-body');
+            if (polyBody) {
+              e.preventDefault();
+              const instId = polyBody.getAttribute('data-inst-id');
+              const initialAngle = coordinatesToPhase(pt, this.center) * 360;
+              this.dragState = {
+                type: 'polygon-rotate',
+                instrumentId: instId,
+                startAngle: initialAngle
+              };
+              if (this.onSelectInstrument) this.onSelectInstrument(instId);
+              return;
+            }
+          });
+
+          window.addEventListener('pointermove', (e) => {
+            if (!this.dragState) return;
+            const pt = getSvgCoords(e);
+            const ds = this.dragState;
+
+            const dx = pt.x - ds.startX;
+            const dy = pt.y - ds.startY;
+            if (Math.hypot(dx, dy) > 3) ds.hasMoved = true;
+
+            if (ds.type === 'vertex-angle') {
+              const phaseTurns = coordinatesToPhase(pt, this.center);
+              if (this.onVertexDrag) {
+                this.onVertexDrag(ds.instrumentId, ds.vertexIndex, phaseTurns);
+              }
+            } else if (ds.type === 'vertex-velocity') {
+              const delta = -dy / 100;
+              if (this.onVertexVelocityChange) {
+                this.onVertexVelocityChange(ds.instrumentId, ds.vertexIndex, delta);
+              }
+            } else if (ds.type === 'polygon-rotate') {
+              const currentAngle = coordinatesToPhase(pt, this.center) * 360;
+              const deltaAngle = currentAngle - ds.startAngle;
+              ds.startAngle = currentAngle;
+              if (this.onPolygonRotate) {
+                this.onPolygonRotate(ds.instrumentId, deltaAngle);
+              }
+            } else if (ds.type === 'radius') {
+              const dist = distanceToCenter(pt, this.center);
+              const normalizedR = Math.max(0.15, Math.min(0.95, dist / this.baseMaxRadius));
+              if (this.onRadiusChange) {
+                this.onRadiusChange(ds.instrumentId, normalizedR);
+              }
+            }
+          });
+
+          window.addEventListener('pointerup', (e) => {
+            if (!this.dragState) return;
+            const ds = this.dragState;
+
+            if (!ds.hasMoved && ds.type === 'vertex-angle') {
+              if (this.onVertexClick) {
+                this.onVertexClick(ds.instrumentId, ds.vertexIndex);
+              }
+            }
+            this.dragState = null;
+          });
+        }
+      }
+
+      /* ============================================================
+       * 9. MAIN APP ORCHESTRATOR
+       * ============================================================ */
+      class App {
+        constructor() {
+          this.state = createInitialState();
+          this.audio = new AudioEngine();
+          this.clock = new MasterClock({
+            bpm: this.state.master.bpm,
+            beats: this.state.master.beats,
+            beatValue: this.state.master.beatValue,
+            subdivision: this.state.master.subdivision
+          });
+          this.engineManager = new EngineManager(this.state.master.seed);
+          this.lastTriggeredEvents = new Set();
+
+          this.initDOM();
+          this.initRenderer();
+          this.bindEvents();
+          this.updateUI();
+        }
+
+        initDOM() {
+          this.btnPlay = document.getElementById('btn-play');
+          this.inputBpm = document.getElementById('input-bpm');
+          this.inputBeats = document.getElementById('input-beats');
+          this.inputBeatValue = document.getElementById('input-beat-value');
+          this.inputSubdivision = document.getElementById('input-subdivision');
+          this.selectQuantize = document.getElementById('select-quantize');
+          this.selectCycleMode = document.getElementById('select-cycle-mode');
+          this.inputSeed = document.getElementById('input-seed');
+          this.btnNewSeed = document.getElementById('btn-new-seed');
+          this.btnSave = document.getElementById('btn-save');
+          this.btnLoad = document.getElementById('btn-load');
+          this.fileInputLoad = document.getElementById('file-input-load');
+
+          this.instrumentListEl = document.getElementById('instrument-list');
+          this.btnAddInstrument = document.getElementById('btn-add-instrument');
+
+          this.svgElement = document.getElementById('polygon-svg');
+          this.hudBpm = document.getElementById('hud-bpm');
+          this.hudPhase = document.getElementById('hud-phase');
+          this.hudCycle = document.getElementById('hud-cycle');
+
+          this.inspectorEl = document.getElementById('inspector-panel');
+          this.instNameInput = document.getElementById('inst-name');
+          this.instSampleSelect = document.getElementById('inst-sample');
+          this.instColorInput = document.getElementById('inst-color');
+          this.instPhaseSlider = document.getElementById('inst-phase');
+          this.instPhaseVal = document.getElementById('inst-phase-val');
+          this.instRotationSlider = document.getElementById('inst-rotation');
+          this.instRotationVal = document.getElementById('inst-rotation-val');
+          this.instRadiusSlider = document.getElementById('inst-radius');
+          this.instRadiusVal = document.getElementById('inst-radius-val');
+          this.instEngineSelect = document.getElementById('inst-engine');
+          this.engineParamsBox = document.getElementById('engine-params-box');
+          this.ratiosChipsContainer = document.getElementById('ratios-chips');
+          this.btnPresetPills = document.getElementById('preset-pills');
+          this.velocityEditor = document.getElementById('velocity-editor');
+          this.btnAddVertex = document.getElementById('btn-add-vertex');
+          this.btnRemoveVertex = document.getElementById('btn-remove-vertex');
+
+          this.drawerEl = document.getElementById('strudel-drawer');
+          this.drawerToggle = document.getElementById('drawer-toggle');
+          this.codeOutput = document.getElementById('strudel-code');
+          this.btnCopyStrudel = document.getElementById('btn-copy-strudel');
+          this.btnDownloadJs = document.getElementById('btn-download-js');
+          this.warningBanner = document.getElementById('strudel-warning');
+        }
+
+        initRenderer() {
+          this.renderer = new PolygonRenderer(this.svgElement, {
+            width: 800,
+            height: 800,
+            maxRadius: 340
+          });
+
+          this.renderer.onSelectInstrument = (instId) => {
+            this.state.selectedInstrumentId = instId;
+            this.updateUI();
+          };
+
+          this.renderer.onVertexDrag = (instId, vertexIdx, newPhaseTurns) => {
+            const inst = this.getInstrument(instId);
+            if (!inst) return;
+            const res = updateRatiosFromVertexDrag(inst.ratios, vertexIdx, newPhaseTurns, inst.phase);
+            if (res.phaseDelta) {
+              inst.phase = (inst.phase + res.phaseDelta + 360) % 360;
+            }
+            inst.ratios = res.ratios;
+            this.syncGainsWithRatios(inst);
+            this.updateUI();
+          };
+
+          this.renderer.onVertexVelocityChange = (instId, vertexIdx, delta) => {
+            const inst = this.getInstrument(instId);
+            if (!inst || !inst.gain) return;
+            const cur = inst.gain[vertexIdx] !== undefined ? inst.gain[vertexIdx] : 0.8;
+            inst.gain[vertexIdx] = Math.max(0.05, Math.min(1.0, Math.round((cur + delta) * 20) / 20));
+            this.updateUI();
+          };
+
+          this.renderer.onVertexClick = (instId, vertexIdx) => {
+            const inst = this.getInstrument(instId);
+            if (!inst) return;
+            const vel = inst.gain && inst.gain[vertexIdx] !== undefined ? inst.gain[vertexIdx] : 0.8;
+            this.audio.trigger(inst.sample, vel);
+            this.renderer.flashVertex(inst.id, vertexIdx, 0, 0, inst.color, vel);
+          };
+
+          this.renderer.onPolygonRotate = (instId, deltaAngle) => {
+            const inst = this.getInstrument(instId);
+            if (!inst) return;
+            inst.phase = (inst.phase + deltaAngle + 360) % 360;
+            this.updateUI();
+          };
+
+          this.renderer.onRadiusChange = (instId, newRadius) => {
+            const inst = this.getInstrument(instId);
+            if (!inst) return;
+            inst.radius = Math.round(newRadius * 100) / 100;
+            this.updateUI();
+          };
+        }
+
+        getInstrument(id) {
+          return this.state.instruments.find(inst => inst.id === id);
+        }
+
+        getSelectedInstrument() {
+          return this.getInstrument(this.state.selectedInstrumentId) || this.state.instruments[0];
+        }
+
+        syncGainsWithRatios(inst) {
+          if (!inst.gain) inst.gain = [];
+          while (inst.gain.length < inst.ratios.length) {
+            inst.gain.push(0.7);
+          }
+          if (inst.gain.length > inst.ratios.length) {
+            inst.gain = inst.gain.slice(0, inst.ratios.length);
+          }
+        }
+
+        bindEvents() {
+          this.btnPlay.addEventListener('click', () => {
+            this.audio.init();
+            if (this.clock.isPlaying) {
+              this.clock.stop();
+              this.state.master.isPlaying = false;
+              this.btnPlay.innerHTML = `<span>▶</span> PLAY`;
+              this.btnPlay.classList.remove('playing');
+            } else {
+              this.clock.start();
+              this.state.master.isPlaying = true;
+              this.btnPlay.innerHTML = `<span>■</span> STOP`;
+              this.btnPlay.classList.add('playing');
+            }
+          });
+
+          this.inputBpm.addEventListener('input', (e) => {
+            const bpm = parseInt(e.target.value, 10) || 120;
+            this.state.master.bpm = bpm;
+            this.clock.setBpm(bpm);
+            this.updateStrudel();
+          });
+
+          this.inputBeats.addEventListener('change', (e) => {
+            const beats = parseInt(e.target.value, 10) || 4;
+            this.state.master.beats = beats;
+            this.clock.setMeter(beats, this.state.master.subdivision, this.state.master.beatValue);
+            this.updateStrudel();
+          });
+
+          this.inputBeatValue.addEventListener('change', (e) => {
+            const bv = parseInt(e.target.value, 10) || 4;
+            this.state.master.beatValue = bv;
+            this.clock.setMeter(this.state.master.beats, this.state.master.subdivision, bv);
+            this.updateStrudel();
+          });
+
+          this.inputSubdivision.addEventListener('change', (e) => {
+            const sub = parseInt(e.target.value, 10) || 16;
+            this.state.master.subdivision = sub;
+            this.clock.setMeter(this.state.master.beats, sub);
+            this.updateStrudel();
+          });
+
+          this.selectQuantize.addEventListener('change', (e) => {
+            this.state.master.quantize = e.target.value;
+            this.updateStrudel();
+          });
+
+          this.selectCycleMode.addEventListener('change', (e) => {
+            this.state.master.cycleMode = e.target.value;
+            this.updateStrudel();
+          });
+
+          this.inputSeed.addEventListener('change', (e) => {
+            const seed = parseInt(e.target.value, 10) || 12345;
+            this.state.master.seed = seed;
+            this.engineManager.setSeed(seed);
+          });
+
+          this.btnNewSeed.addEventListener('click', () => {
+            const newSeed = Math.floor(Math.random() * 900000) + 100000;
+            this.state.master.seed = newSeed;
+            this.inputSeed.value = newSeed;
+            this.engineManager.setSeed(newSeed);
+          });
+
+          this.btnAddInstrument.addEventListener('click', () => {
+            if (this.state.instruments.length >= 5) {
+              alert('Maximum 5 instruments allowed');
+              return;
+            }
+            const existingCount = this.state.instruments.length;
+            const defaultSamples = ['bd', 'sd', 'hh', 'oh', 'rim'];
+            const defaultNames = ['Kick', 'Snare', 'Closed HH', 'Open HH', 'Perc'];
+            const defaultColors = ['#ff2d55', '#00e5ff', '#ffea00', '#00e676', '#b388ff'];
+            const sample = defaultSamples[existingCount % defaultSamples.length];
+            const name = defaultNames[existingCount % defaultNames.length];
+            const color = defaultColors[existingCount % defaultColors.length];
+            const radius = 0.25 + existingCount * 0.16;
+
+            const newInst = createDefaultInstrument(null, name, sample, [3, 3, 2], radius, color);
+            this.state.instruments.push(newInst);
+            this.state.selectedInstrumentId = newInst.id;
+            this.updateUI();
+          });
+
+          this.instNameInput.addEventListener('input', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.name = e.target.value;
+            this.renderInstrumentList();
+          });
+
+          this.instSampleSelect.addEventListener('change', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.sample = e.target.value;
+            this.updateStrudel();
+          });
+
+          this.instColorInput.addEventListener('input', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.color = e.target.value;
+            this.renderInstrumentList();
+          });
+
+          this.instPhaseSlider.addEventListener('input', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.phase = parseInt(e.target.value, 10);
+            this.instPhaseVal.textContent = `${inst.phase}°`;
+            this.updateStrudel();
+          });
+
+          this.instRotationSlider.addEventListener('input', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            const rot = parseFloat(e.target.value);
+            inst.rotation = rot;
+            if (!inst.engineParams) inst.engineParams = {};
+            inst.engineParams.speed = rot;
+            this.instRotationVal.textContent = `${rot.toFixed(2)}x`;
+          });
+
+          this.instRadiusSlider.addEventListener('input', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            const r = parseFloat(e.target.value);
+            inst.radius = r;
+            this.instRadiusVal.textContent = `${Math.round(r * 100)}%`;
+          });
+
+          this.instEngineSelect.addEventListener('change', (e) => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.engine = e.target.value;
+            this.renderEngineParams(inst);
+          });
+
+          this.btnAddVertex.addEventListener('click', () => {
+            const inst = this.getSelectedInstrument();
+            if (!inst || inst.ratios.length >= 16) return;
+            inst.ratios.push(2);
+            this.syncGainsWithRatios(inst);
+            this.updateUI();
+          });
+
+          this.btnRemoveVertex.addEventListener('click', () => {
+            const inst = this.getSelectedInstrument();
+            if (!inst || inst.ratios.length <= 2) return;
+            inst.ratios.pop();
+            this.syncGainsWithRatios(inst);
+            this.updateUI();
+          });
+
+          this.drawerToggle.addEventListener('click', () => {
+            this.drawerEl.classList.toggle('collapsed');
+          });
+
+          this.btnCopyStrudel.addEventListener('click', () => {
+            const code = this.codeOutput.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+              const orig = this.btnCopyStrudel.textContent;
+              this.btnCopyStrudel.textContent = '✓ Copied!';
+              setTimeout(() => (this.btnCopyStrudel.textContent = orig), 1500);
+            });
+          });
+
+          this.btnDownloadJs.addEventListener('click', () => {
+            const code = this.codeOutput.textContent;
+            const blob = new Blob([code], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rhythmic-polygon-${Date.now()}.js`;
+            a.click();
+            URL.revokeObjectURL(url);
+          });
+
+          this.btnSave.addEventListener('click', () => {
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(this.state, null, 2));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = 'rhythmic-polygon-project.json';
+            a.click();
+          });
+
+          this.btnLoad.addEventListener('click', () => {
+            this.fileInputLoad.click();
+          });
+
+          this.fileInputLoad.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              try {
+                const loaded = JSON.parse(event.target.result);
+                if (loaded.instruments && loaded.master) {
+                  this.state = loaded;
+                  this.clock.setBpm(this.state.master.bpm);
+                  this.clock.setMeter(this.state.master.beats, this.state.master.subdivision, this.state.master.beatValue || 4);
+                  this.engineManager.setSeed(this.state.master.seed);
+                  this.inputBpm.value = this.state.master.bpm;
+                  this.inputBeats.value = this.state.master.beats;
+                  this.inputBeatValue.value = this.state.master.beatValue || 4;
+                  this.inputSubdivision.value = this.state.master.subdivision;
+                  this.inputSeed.value = this.state.master.seed;
+                  this.updateUI();
+                }
+              } catch (err) {
+                alert('Invalid project JSON file');
+              }
+            };
+            reader.readAsText(file);
+          });
+
+          this.renderPresetsPills();
+
+          this.clock.onTick((tickInfo) => {
+            this.engineManager.update(this.state.instruments, tickInfo);
+            this.checkEventTriggers(tickInfo);
+            this.renderer.render(this.state, tickInfo.currPhase);
+
+            this.hudBpm.textContent = `${tickInfo.bpm} BPM`;
+            this.hudPhase.textContent = `${Math.round(tickInfo.currPhase * 360)}°`;
+            this.hudCycle.textContent = `Cycle #${tickInfo.cycleCount + 1}`;
+          });
+
+          requestAnimationFrame(() => {
+            this.renderer.render(this.state, 0);
+          });
+        }
+
+        checkEventTriggers(tickInfo) {
+          const { prevPhase, currPhase, wrapped } = tickInfo;
+          const quantizeSub = this.state.master.quantize !== 'off' ? parseInt(this.state.master.quantize.split('/')[1] || 16, 10) : null;
+          const maxR = this.renderer.baseMaxRadius;
+
+          if (wrapped) {
+            this.lastTriggeredEvents.clear();
+          }
+
+          const anySolo = this.state.instruments.some(i => i.solo);
+
+          this.state.instruments.forEach((inst) => {
+            if (inst.muted) return;
+            if (anySolo && !inst.solo) return;
+
+            const vertices = computePolygonVertices(inst, this.renderer.center, maxR, quantizeSub);
+
+            vertices.forEach((v) => {
+              const eventTime = v.effectiveTime;
+              const eventKey = `${inst.id}_${v.index}_${tickInfo.cycleCount}`;
+
+              let isHit = false;
+              if (!wrapped) {
+                if (eventTime >= prevPhase && eventTime < currPhase) {
+                  isHit = true;
+                }
+              } else {
+                if (eventTime >= prevPhase || eventTime < currPhase) {
+                  isHit = true;
+                }
+              }
+
+              if (isHit && !this.lastTriggeredEvents.has(eventKey)) {
+                this.lastTriggeredEvents.add(eventKey);
+                this.audio.trigger(inst.sample, v.velocity);
+                this.renderer.flashVertex(inst.id, v.index, v.x, v.y, inst.color, v.velocity);
+              }
+            });
+          });
+        }
+
+        renderPresetsPills() {
+          this.btnPresetPills.innerHTML = '';
+          Object.keys(PRESETS).forEach((name) => {
+            const pill = document.createElement('button');
+            pill.className = 'preset-pill';
+            pill.textContent = name;
+            pill.addEventListener('click', () => {
+              const inst = this.getSelectedInstrument();
+              if (!inst) return;
+              inst.ratios = [...PRESETS[name]];
+              this.syncGainsWithRatios(inst);
+              this.updateUI();
+            });
+            this.btnPresetPills.appendChild(pill);
+          });
+
+          const eucBtn = document.createElement('button');
+          eucBtn.className = 'preset-pill';
+          eucBtn.textContent = 'Euclidean E(5,8)';
+          eucBtn.addEventListener('click', () => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            inst.ratios = generateEuclideanRatios(5, 8);
+            this.syncGainsWithRatios(inst);
+            this.updateUI();
+          });
+          this.btnPresetPills.appendChild(eucBtn);
+
+          const rndBtn = document.createElement('button');
+          rndBtn.className = 'preset-pill';
+          rndBtn.textContent = 'Random Form';
+          rndBtn.addEventListener('click', () => {
+            const inst = this.getSelectedInstrument();
+            if (!inst) return;
+            const count = Math.floor(Math.random() * 4) + 3;
+            const ratios = [];
+            for (let i = 0; i < count; i++) {
+              ratios.push(Math.floor(Math.random() * 4) + 1);
+            }
+            inst.ratios = ratios;
+            this.syncGainsWithRatios(inst);
+            this.updateUI();
+          });
+          this.btnPresetPills.appendChild(rndBtn);
+        }
+
+        renderInstrumentList() {
+          this.instrumentListEl.innerHTML = '';
+          this.state.instruments.forEach((inst) => {
+            const isSelected = inst.id === this.state.selectedInstrumentId;
+            const card = document.createElement('div');
+            card.className = `instrument-card ${isSelected ? 'selected' : ''}`;
+            card.style.setProperty('--inst-color', inst.color);
+
+            card.innerHTML = `
+              <div class="inst-info">
+                <div class="inst-dot" style="background: ${inst.color};"></div>
+                <div>
+                  <div class="inst-name">${inst.name} <span style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">(${inst.sample})</span></div>
+                  <div class="inst-ratios-summary">[${inst.ratios.join(', ')}]</div>
+                </div>
+              </div>
+              <div class="inst-actions">
+                <button class="btn-icon btn-solo ${inst.solo ? 'active' : ''}" title="Solo">S</button>
+                <button class="btn-icon btn-mute ${inst.muted ? 'active' : ''}" title="Mute">M</button>
+                <button class="btn-icon btn-delete" title="Delete">✕</button>
+              </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+              if (e.target.closest('.inst-actions')) return;
+              this.state.selectedInstrumentId = inst.id;
+              this.updateUI();
+            });
+
+            card.querySelector('.btn-solo').addEventListener('click', (e) => {
+              e.stopPropagation();
+              inst.solo = !inst.solo;
+              this.updateUI();
+            });
+
+            card.querySelector('.btn-mute').addEventListener('click', (e) => {
+              e.stopPropagation();
+              inst.muted = !inst.muted;
+              this.updateUI();
+            });
+
+            card.querySelector('.btn-delete').addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (this.state.instruments.length <= 1) {
+                alert('Must keep at least 1 instrument');
+                return;
+              }
+              this.state.instruments = this.state.instruments.filter(i => i.id !== inst.id);
+              if (this.state.selectedInstrumentId === inst.id) {
+                this.state.selectedInstrumentId = this.state.instruments[0].id;
+              }
+              this.updateUI();
+            });
+
+            this.instrumentListEl.appendChild(card);
+          });
+        }
+
+        renderInspector() {
+          const inst = this.getSelectedInstrument();
+          if (!inst) return;
+
+          this.inspectorEl.style.setProperty('--inst-color', inst.color);
+          this.instNameInput.value = inst.name;
+          this.instSampleSelect.value = inst.sample;
+          this.instColorInput.value = inst.color;
+          this.instPhaseSlider.value = Math.round(inst.phase % 360);
+          this.instPhaseVal.textContent = `${Math.round(inst.phase % 360)}°`;
+          this.instRotationSlider.value = inst.rotation || 1.0;
+          this.instRotationVal.textContent = `${(inst.rotation || 1.0).toFixed(2)}x`;
+          this.instRadiusSlider.value = inst.radius;
+          this.instRadiusVal.textContent = `${Math.round(inst.radius * 100)}%`;
+          this.instEngineSelect.value = inst.engine || 'static';
+
+          this.renderEngineParams(inst);
+          this.renderRatiosChips(inst);
+          this.renderVelocityEditor(inst);
+        }
+
+        renderEngineParams(inst) {
+          if (!inst.engineParams) {
+            inst.engineParams = { speed: inst.rotation || 1.0, drift: 0.15, mutationProb: 0.3, mutationAmount: 1, cycleLength: 4 };
+          }
+          const params = inst.engineParams;
+          let html = '';
+
+          switch (inst.engine) {
+            case 'static':
+              html = `<div style="font-size: 11px; color: var(--text-muted); font-style: italic;">Polygon orientation remains fixed relative to master clock.</div>`;
+              break;
+            case 'rotation':
+              html = `
+                <div class="form-row">
+                  <label>Speed Multiplier: <span>${(params.speed || 1.0).toFixed(2)}x</span></label>
+                  <input type="range" min="-4" max="4" step="0.25" value="${params.speed || 1.0}" id="param-speed">
+                </div>
+              `;
+              break;
+            case 'drift':
+              html = `
+                <div class="form-row">
+                  <label>Phase Drift Rate: <span>${(params.drift || 0.15).toFixed(2)}</span></label>
+                  <input type="range" min="0.01" max="1.0" step="0.01" value="${params.drift || 0.15}" id="param-drift">
+                </div>
+              `;
+              break;
+            case 'mutation':
+            case 'random':
+              html = `
+                <div class="form-row">
+                  <label>Cycle Interval: <span>Every ${params.cycleLength || 4} cycles</span></label>
+                  <input type="range" min="1" max="16" step="1" value="${params.cycleLength || 4}" id="param-cycle-len">
+                </div>
+                <div class="form-row">
+                  <label>Mutation Probability: <span>${Math.round((params.mutationProb || 0.3) * 100)}%</span></label>
+                  <input type="range" min="0.1" max="1.0" step="0.05" value="${params.mutationProb || 0.3}" id="param-mut-prob">
+                </div>
+              `;
+              break;
+          }
+
+          this.engineParamsBox.innerHTML = html;
+
+          const speedInput = this.engineParamsBox.querySelector('#param-speed');
+          if (speedInput) {
+            speedInput.addEventListener('input', (e) => {
+              params.speed = parseFloat(e.target.value);
+              inst.rotation = params.speed;
+              this.instRotationSlider.value = params.speed;
+              this.instRotationVal.textContent = `${params.speed.toFixed(2)}x`;
+              this.renderEngineParams(inst);
+            });
+          }
+
+          const driftInput = this.engineParamsBox.querySelector('#param-drift');
+          if (driftInput) {
+            driftInput.addEventListener('input', (e) => {
+              params.drift = parseFloat(e.target.value);
+              this.renderEngineParams(inst);
+            });
+          }
+
+          const cycleLenInput = this.engineParamsBox.querySelector('#param-cycle-len');
+          if (cycleLenInput) {
+            cycleLenInput.addEventListener('input', (e) => {
+              params.cycleLength = parseInt(e.target.value, 10);
+              this.renderEngineParams(inst);
+            });
+          }
+
+          const probInput = this.engineParamsBox.querySelector('#param-mut-prob');
+          if (probInput) {
+            probInput.addEventListener('input', (e) => {
+              params.mutationProb = parseFloat(e.target.value);
+              this.renderEngineParams(inst);
+            });
+          }
+        }
+
+        renderRatiosChips(inst) {
+          this.ratiosChipsContainer.innerHTML = '';
+          inst.ratios.forEach((ratio, idx) => {
+            const chip = document.createElement('div');
+            chip.className = 'ratio-chip';
+            chip.innerHTML = `
+              <span style="color: var(--text-dim); font-size: 10px;">#${idx + 1}</span>
+              <input type="number" min="0.5" max="32" step="0.5" value="${ratio}">
+            `;
+            const input = chip.querySelector('input');
+            input.addEventListener('change', (e) => {
+              const val = Math.max(0.5, Math.min(32, parseFloat(e.target.value) || 1));
+              inst.ratios[idx] = val;
+              this.updateUI();
+            });
+            this.ratiosChipsContainer.appendChild(chip);
+          });
+        }
+
+        renderVelocityEditor(inst) {
+          this.velocityEditor.innerHTML = '';
+          this.velocityEditor.style.setProperty('--inst-color', inst.color);
+
+          inst.ratios.forEach((_, idx) => {
+            const col = document.createElement('div');
+            col.className = 'vel-column';
+            const vel = inst.gain && inst.gain[idx] !== undefined ? inst.gain[idx] : 0.8;
+            const heightPct = Math.round(vel * 100);
+
+            col.innerHTML = `
+              <div class="vel-bar-track">
+                <div class="vel-bar-fill" style="height: ${heightPct}%; background: ${inst.color};"></div>
+              </div>
+              <div class="vel-label">${Math.round(vel * 10)}</div>
+            `;
+
+            const track = col.querySelector('.vel-bar-track');
+            let isDragging = false;
+
+            const updateFromPointer = (e) => {
+              const rect = track.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const normalized = 1.0 - Math.max(0, Math.min(1, y / rect.height));
+              inst.gain[idx] = Math.round(normalized * 20) / 20;
+              this.updateUI();
+            };
+
+            track.addEventListener('pointerdown', (e) => {
+              isDragging = true;
+              track.setPointerCapture(e.pointerId);
+              updateFromPointer(e);
+            });
+            track.addEventListener('pointermove', (e) => {
+              if (isDragging) updateFromPointer(e);
+            });
+            track.addEventListener('pointerup', (e) => {
+              isDragging = false;
+            });
+
+            this.velocityEditor.appendChild(col);
+          });
+        }
+
+        updateStrudel() {
+          const { code, hasFractionalWarning } = StrudelExporter.export(this.state);
+          this.codeOutput.textContent = code;
+
+          if (hasFractionalWarning) {
+            this.warningBanner.classList.add('visible');
+          } else {
+            this.warningBanner.classList.remove('visible');
+          }
+        }
+
+        updateUI() {
+          this.renderInstrumentList();
+          this.renderInspector();
+          this.updateStrudel();
+          if (!this.clock.isPlaying) {
+            this.renderer.render(this.state, this.clock.phase);
+          }
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        window.rhythmicPolygonApp = new App();
+      });
+    })();
+  </script>
+</body>
+</html>
