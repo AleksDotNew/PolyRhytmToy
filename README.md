@@ -47,27 +47,25 @@ Instead of a traditional 16-step grid, rhythm here emerges from time geometry:
 
 ### 🚀 Getting Started
 
-Built with **pure HTML5, CSS3, and Vanilla JavaScript (ES6+)** — no bundlers, frameworks, or dependencies required.
+This is a **100% static, client-side web application** built with pure HTML5, CSS3, and Vanilla JavaScript (ES6+).
+* **No backend or server required** (no Python, Node.js, PHP, etc.).
+* **No build tools or bundlers needed** (no Webpack, Vite, npm, etc.).
+* **Works offline** in any modern web browser.
 
-#### Run with a local HTTP server:
+#### How to run:
+Simply open `index.html` directly in your browser:
+* Double-click `index.html` in your file manager, or
+* On macOS terminal: `open index.html`
+* On Linux terminal: `xdg-open index.html`
+* On Windows terminal: `start index.html`
 
-```bash
-# Python 3
-python3 -m http.server 8000
-
-# or Node.js npx
-npx serve .
-```
-
-Then navigate to [http://localhost:8000](http://localhost:8000) in any modern browser (Chrome, Firefox, Safari, Edge).
-
-*Alternatively, simply open `index.html` directly in your browser.*
+*(Can also be hosted on any static hosting like GitHub Pages, Vercel, or Netlify with zero configuration).*
 
 ### 📁 Project Structure
 
 ```text
 PolyRhytmToy/
-├── index.html        # Main application page
+├── index.html        # Main static application entry point
 ├── css/
 │   └── style.css     # Dark-theme styles, layouts, responsive design
 ├── js/
@@ -139,27 +137,25 @@ stack(
 
 ### 🚀 Быстрый старт
 
-Проект написан на **чистом HTML5, CSS3 и Vanilla JavaScript (ES6+)** без внешних зависимостей и необходимости сборки.
+Это **полностью статическое клиентское веб-приложение** на чистом HTML5, CSS3 и Vanilla JavaScript (ES6+).
+* **Бэкенд и сервер не требуются** (никакого Python, Node.js и прочего).
+* **Сборка и зависимости не требуются** (никакого Webpack, npm, пакетов).
+* **Работает офлайн** в любом современном браузере.
 
-#### Запуск через локальный сервер:
+#### Как запустить:
+Просто откройте файл `index.html` в браузере:
+* Двойным кликом по `index.html` в проводнике/Finder, или
+* Командой в терминале macOS: `open index.html`
+* Командой в терминале Linux: `xdg-open index.html`
+* Командой в терминале Windows: `start index.html`
 
-```bash
-# Python 3
-python3 -m http.server 8000
-
-# или Node.js npx
-npx serve .
-```
-
-После этого откройте [http://localhost:8000](http://localhost:8000) в браузере.
-
-*Также приложение можно открыть напрямую через двойной клик по файлу `index.html`.*
+*(Также проект можно разместить на любом статическом хостинге, например GitHub Pages, без каких-либо настроек).*
 
 ### 📁 Структура проекта
 
 ```text
 PolyRhytmToy/
-├── index.html        # Главная страница приложения
+├── index.html        # Главная статическая страница приложения
 ├── css/
 │   └── style.css     # Стили интерфейса (тёмная тема, панели, адаптив)
 ├── js/
